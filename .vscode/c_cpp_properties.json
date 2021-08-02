@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "name": "ARM none eabi GCC",
+            "includePath": [
+                "${workspaceFolder}/cmsisf0",
+                "${workspaceFolder}/cmsisf0/registers",
+                "${workspaceFolder}/cmsisf0/core",
+                "${workspaceFolder}/half0/Inc", 
+                "${workspaceFolder}/app"
+                
+                
+            ],
+            "defines": [
+                "STM32F072xB",
+                "USE_HAL_DRIVER"
+            ],
+            "cStandard": "gnu11",
+            "compilerPath": "C:/Program Files (x86)/GNU Arm Embedded Toolchain/9 2020-q2-update/bin/arm-none-eabi-gcc.exe",
+            "intelliSenseMode": "gcc-x64"
+        }
+    ],
+    "version": 4
+}
