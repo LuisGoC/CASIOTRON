@@ -66,8 +66,8 @@ void MOD_TEMP_SetAlarms( TEMP_HandleTypeDef *htemp, uint16_t lower, uint16_t upp
     HAL_I2C_Master_Transmit(htemp->I2cHandler, htemp->SensorAddress, writeData, 3, 1000);
 
     writeData[0] = CRITICAL_REGISTER;
-    writeData[1] = ((upper >> 4) + 5) >> 4;
-    writeData[2] = ((upper >> 4) +5);
+    writeData[1] = ((upper >> 4) + 5UL) >> 4;
+    writeData[2] = ((upper >> 4) + 5UL);
 
     HAL_I2C_Master_Transmit(htemp->I2cHandler, htemp->SensorAddress, writeData, 3, 1000);
 

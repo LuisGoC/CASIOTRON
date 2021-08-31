@@ -11,6 +11,8 @@ void HIL_QUEUE_Init(QUEUE_HandleTypeDef *hqueue)
 
 uint8_t HIL_QUEUE_Write(QUEUE_HandleTypeDef *hqueue, void *data)
 {
+    uint8_t err; 
+
     if (hqueue->Full == NOT_OK) 
     { 
         memcpy(hqueue->Buffer + hqueue->Head, data, hqueue->Size);  
@@ -27,12 +29,14 @@ uint8_t HIL_QUEUE_Write(QUEUE_HandleTypeDef *hqueue, void *data)
         {
             hqueue->Empty = NOT_OK;
         }
-        return OK;
+        err = OK;
     }
     else
     {
-        return NOT_OK;
+        err = NOT_OK;
     }
+
+    return err;
 }
 
 uint8_t HIL_QUEUE_Read(QUEUE_HandleTypeDef *hqueue, void *data)
@@ -63,7 +67,7 @@ uint8_t HIL_QUEUE_Read(QUEUE_HandleTypeDef *hqueue, void *data)
 
 uint8_t HIL_QUEUE_IsEmpty(QUEUE_HandleTypeDef *hqueue)
 {
-    if (hqueue->Empty == OK)
+    if (hqueue->Empty == (uint8_t)OK)
     {
         return OK;
     }

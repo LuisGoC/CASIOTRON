@@ -12,11 +12,11 @@ LINKER = linker.ld
 #Simbolos gloobales del programa (#defines globales)
 SYMBOLS = -DSTM32F070xB -DUSE_HAL_DRIVER
 #directorios con archivos a compilar (.c y .s)
-SRC_PATHS  = app
+SRC_PATHS  = app/Src
 SRC_PATHS += cmsisf0/startups
 SRC_PATHS += half0/Src
 #direcotrios con archivos .h
-INC_PATHS  = app
+INC_PATHS  = app/Inc
 INC_PATHS += cmsisf0/core
 INC_PATHS += cmsisf0/registers
 INC_PATHS += half0/Inc
@@ -71,4 +71,7 @@ open :
 #Lanzar sesion de debug (es necesario primero Conectar la tarjeta con OpenOCD)
 debug :
 	$(TOOLCHAIN)-gdb Build/$(TARGET).elf -iex "set auto-load safe-path /"
+
+misra_test: 
+	cppcheck --addon=misra.json --inline-suppr --quiet --std=c99 --template=gcc --force app/Src -I app/Inc
 

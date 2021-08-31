@@ -33,16 +33,16 @@ int main(void)
         if(timerFlag == SET)
         {
             timerFlag = RESET; 
-            if(timerTick%1 == 0)
+            if((timerTick % 1UL) == 0UL)
             {
                 serial_task();
             }
-            if(timerTick%5 == 0)
+            if((timerTick % 5UL) == 0UL)
             {
                 clock_task();
                 heart_beat(); 
             }
-            if(timerTick%3 == 0)
+            if((timerTick % 3UL) == 0UL)
             {
                 pet_the_dog();
             }
@@ -78,11 +78,11 @@ void heart_init(void)
   */
 void heart_beat(void)
 {
-    if(HIL_QUEUE_IsEmpty(&HeartQueue) != 1)
+    if(HIL_QUEUE_IsEmpty(&HeartQueue) != 1U)
     {
         HIL_QUEUE_Read(&HeartQueue, &heartBeatTime);
     }
-    if((timerTick % (heartBeatTime/10)) == 0)
+    if((timerTick % (heartBeatTime/10UL)) == 0UL)
     {
         HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
     }
@@ -149,6 +149,7 @@ void tim_init(void)
   */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
+    (void)htim;
     timerFlag = SET;
     timerTick++;
 }
