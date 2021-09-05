@@ -1,5 +1,5 @@
-#ifndef _TEMP_H_
-#define _TEMP_H_
+#ifndef TEMP_H_
+#define TEMP_H_
 
 #include "app_bsp.h"
 

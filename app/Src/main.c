@@ -80,7 +80,7 @@ void heart_beat(void)
 {
     if(HIL_QUEUE_IsEmpty(&HeartQueue) != 1U)
     {
-        HIL_QUEUE_Read(&HeartQueue, &heartBeatTime);
+        (void)HIL_QUEUE_Read(&HeartQueue, &heartBeatTime);
     }
     if((timerTick % (heartBeatTime/10UL)) == 0UL)
     {

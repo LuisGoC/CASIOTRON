@@ -28,7 +28,7 @@ void i2c_init(void);
 void lcd_init(void);
 void temp_init(void);
 void intToString(char *str, uint8_t num);
-void joinStrings(char *str1, char *str2);
+void joinStrings(char *str1,const char *str2);
 
 /*------ Variables -------*/
 RTC_HandleTypeDef RtcHandle;
@@ -207,7 +207,7 @@ void RTC_DateConfig(void)
   */
 void RTC_AlarmConfig(void)
 {
-    memset(&RTC_AlarmInit, 0, sizeof(RTC_AlarmInit));
+    (void)memset(&RTC_AlarmInit, 0, sizeof(RTC_AlarmInit));
 
     HAL_RTC_DeactivateAlarm(&RtcHandle, RTC_ALARM_A);
 
@@ -226,24 +226,27 @@ void RTC_AlarmConfig(void)
   */
 void TEMP_LOWER_UPPER_CONFIG(void)
 {
-    uint16_t lower, upper;
+    int16_t lower; 
+    int16_t upper;
 
     if(MsgToRead.param1 < 0)
     {
-        lower = ((((MsgToRead.param1 * -1) - 1) ^ 255) << 4) | 0x800;
+        lower = (((MsgToRead.param1 * -1) - 1) ^ 255);
+        lower = ((uint8_t)lower << 4u) | 0x800u;
     }
     else
     {
-        lower = (MsgToRead.param1 << 4);
+        lower = ((uint8_t)MsgToRead.param1 << 4u);
     }
 
     if(MsgToRead.param2 < 0)
     {
-        upper = ((((MsgToRead.param2 * -1) - 1) ^ 255) << 4) | 0x800;
+        upper = (((MsgToRead.param2 * -1) - 1) ^ 255);
+        upper = ((uint8_t)upper << 4u) | 0x800u;
     }
     else
     {
-        upper = (MsgToRead.param2 << 4);
+        upper = ((uint8_t)MsgToRead.param2 << 4u);
     }
 
     MOD_TEMP_SetAlarms(&TmpHandle, lower, upper);
@@ -257,20 +260,21 @@ void TEMP_LOWER_UPPER_CONFIG(void)
 int8_t getTemperature(void)
 {
     uint16_t temperatureRegister;
-    uint8_t upperRegister, lowerRegister;
-    int8_t temperature;
+    uint8_t upperRegister; 
+    uint8_t lowerRegister;
+    int16_t temperature;
 
     temperatureRegister = MOD_TEMP_Read(&TmpHandle);
     
     upperRegister = temperatureRegister >> 8;
     lowerRegister = temperatureRegister;
 
-    upperRegister = upperRegister & 0x1F;
+    upperRegister = upperRegister & 0x1Fu;
 
-    if ((upperRegister & 0x10) == 0x10) //Si la temperatura es negativa
+    if ((upperRegister & 0x10u) == 0x10u) //if temperature < 0
     { 
-        upperRegister = upperRegister & 0x0F; // se limpia el bit del signo
-        temperature = 256 - ((upperRegister << 4) + (lowerRegister >> 4));
+        upperRegister = upperRegister & 0x0Fu; // register sign bit clear
+        temperature = 256u - (uint16_t)((upperRegister << 4u) + (lowerRegister >> 4u));
     }
     else
     { 
@@ -287,12 +291,14 @@ int8_t getTemperature(void)
   */
 void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc)
 {
+    (void)hrtc;
     alarmStat = SET;
     HAL_RTC_DeactivateAlarm(&RtcHandle, RTC_ALARM_A);
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
+    (void)GPIO_Pin;
     tempAlarmStat = SET; //bandera de alarma activa
     MOD_TEMP_DisableAlarm(&TmpHandle);
     temperatureFlag = 0; //bandera de alarma configurada
@@ -342,7 +348,7 @@ void showDateAndTime(void)
     char *months[] = {"ENE,", "FEB,", "MAR,", "ABR,", "MAY,", "JUN,", "JUL,", "AGO,", "SEP,", "OCT,", "NOV,", "DIC,"};
     char *weekDays[] = {"Lu", "Ma", "Mi", "Ju", "Vi", "Sa", "Do"};
     int8_t temperature;
-
+    
     temperature = getTemperature();
 
     joinStrings(bufferLine1, " ");
@@ -367,17 +373,17 @@ void showDateAndTime(void)
     intToString(convertionBuffer, temperature);
     joinStrings(bufferLine2, convertionBuffer);
 
-    if((__HAL_RTC_ALARM_GET_IT_SOURCE(&RtcHandle, RTC_ALARM_A)==1) && (temperatureFlag == 1))
+    if((__HAL_RTC_ALARM_GET_IT_SOURCE(&RtcHandle, RTC_ALARM_A)==1) && (temperatureFlag == 1u))
     {
         joinStrings(bufferLine2, "C  AT");
     }
     else
     {
-        if(temperatureFlag == 1)
+        if(temperatureFlag == 1u)
         {
             joinStrings(bufferLine2, "C   T");
         }
-        else if (__HAL_RTC_ALARM_GET_IT_SOURCE(&RtcHandle, RTC_ALARM_A))
+        else if (__HAL_RTC_ALARM_GET_IT_SOURCE(&RtcHandle, RTC_ALARM_A) == 1)
         {
             joinStrings(bufferLine2, "C  A ");
         }
@@ -408,7 +414,7 @@ void startAlarm(void)
 
     temperature = getTemperature();
 
-    if (time % 2 == 0)
+    if ((time % 2u) == 0u)
     {
         joinStrings(bufferLine2, "    ");
     }
@@ -424,7 +430,7 @@ void startAlarm(void)
     joinStrings(bufferLine2, " ");
     intToString(convertionBuffer, temperature);
     joinStrings(bufferLine2, convertionBuffer);
-    if (time % 2 == 0)
+    if ((time % 2u) == 0u)
     {
         joinStrings(bufferLine2, "C   ");
     }
@@ -438,7 +444,7 @@ void startAlarm(void)
 
     time++;
 
-    if (time > 59)
+    if (time > 59u)
     {
         alarmStat = RESET;
         tempAlarmStat = RESET; //Bandera de alarma activa, se desactiva
@@ -461,7 +467,7 @@ void showAlarmDetails(void)
 
     HAL_RTC_GetAlarm(&RtcHandle, &RTC_AlarmRead, RTC_ALARM_A, RTC_FORMAT_BIN);
 
-    if((__HAL_RTC_ALARM_GET_IT_SOURCE(&RtcHandle, RTC_ALARM_A)==1) && (temperatureFlag == 1))
+    if((__HAL_RTC_ALARM_GET_IT_SOURCE(&RtcHandle, RTC_ALARM_A)==1) && (temperatureFlag == 1u))
     {
         joinStrings(bufferLine2, "AT ");
         intToString(convertionBuffer, RTC_AlarmRead.AlarmTime.Hours);
@@ -479,7 +485,7 @@ void showAlarmDetails(void)
     }
     else
     {
-        if(temperatureFlag == 1)
+        if(temperatureFlag == 1u)
         {
             joinStrings(bufferLine2, " T       ");
             intToString(convertionBuffer, lowerValue);
@@ -489,7 +495,7 @@ void showAlarmDetails(void)
             joinStrings(bufferLine2, convertionBuffer);
             joinStrings(bufferLine2, "C ");
         }
-        else if (__HAL_RTC_ALARM_GET_IT_SOURCE(&RtcHandle, RTC_ALARM_A))
+        else if (__HAL_RTC_ALARM_GET_IT_SOURCE(&RtcHandle, RTC_ALARM_A) == 1)
         {
             joinStrings(bufferLine2, "A  ");
             intToString(convertionBuffer, RTC_AlarmRead.AlarmTime.Hours);
@@ -518,7 +524,9 @@ void showAlarmDetails(void)
 void clock_task(void)
 {
     static uint8_t clockState = CLK_IDLE;
-    static int8_t lastSec1, lastSec2, lastSec3;
+    static int8_t lastSec1; 
+    static int8_t lastSec2;
+    static int8_t lastSec3;
 
     HAL_RTC_GetTime(&RtcHandle, &RTC_TimeRead, RTC_FORMAT_BIN);
     HAL_RTC_GetDate(&RtcHandle, &RTC_DateRead, RTC_FORMAT_BIN);
@@ -532,7 +540,7 @@ void clock_task(void)
             HAL_RTC_GetDate(&RtcHandle, &RTC_DateRead, RTC_FORMAT_BIN);
             lastSec1 = RTC_TimeRead.Seconds;
         }
-        if (alarmStat == SET || tempAlarmStat == SET)
+        if ((alarmStat == SET) || (tempAlarmStat == SET))
         {
             if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == 0)
             {
@@ -595,17 +603,19 @@ void clock_task(void)
   */
 void intToString(char *str, uint8_t num)
 {
-    uint8_t copiaNum, r = 0, i;
+    uint8_t copiaNum; 
+    uint8_t r = 0; 
+    uint8_t i;
 
-    if (num < 0)
+    if (num < 0u)
     {
-        copiaNum = num * -1;
+        copiaNum = (int8_t)num * -1;
         i = 1;
         str[0] = '-';
     }
     else
     {
-        if (num < 10)
+        if (num < 10u)
         {
             copiaNum = num;
             i = 1;
@@ -613,7 +623,7 @@ void intToString(char *str, uint8_t num)
         }
         else
         {
-            if (num % 10 == 0)
+            if ((num % 10u) == 0u)
             {
                 str[1] = '0';
             }
@@ -621,22 +631,22 @@ void intToString(char *str, uint8_t num)
             i = 0;
         }
     }
-    while (copiaNum != 0)
+    while (copiaNum != 0u)
     {
-        r = r * 10;
-        r = r + copiaNum % 10;
-        copiaNum = copiaNum / 10;
+        r = r * 10u;
+        r = r + (copiaNum % 10u);
+        copiaNum = copiaNum / 10u;
     }
-    if (r == 0)
+    if (r == 0u)
     {
         str[i] = '0';
     }
     else
     {
-        for (; r > 0; i++)
+        for (; r > 0u; i++)
         {
-            str[i] = (char)((r % 10) + 48);
-            r /= 10;
+            str[i] = ((r % 10u) + 48u);
+            r /= 10u;
         }
     }
 }
@@ -647,7 +657,7 @@ void intToString(char *str, uint8_t num)
   * @param str2 pointer to a string 
   * @retval None
   */
-void joinStrings(char *str1, char *str2)
+void joinStrings(char *str1, const char *str2)
 {
     uint8_t i;
 
@@ -655,9 +665,10 @@ void joinStrings(char *str1, char *str2)
     {
         str1[i] = str1[i];
     }
-    for (uint8_t j = 0; str2[j] != '\0'; j++, i++)
+    for (uint8_t j = 0; str2[j] != '\0'; i++)
     {
         str1[i] = str2[j];
+        j++;
     }
-    str1[i + 1] = 0;
+    str1[i + 1u] = 0u;
 }

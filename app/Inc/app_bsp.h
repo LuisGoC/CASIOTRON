@@ -1,5 +1,5 @@
-#ifndef _BSP_H_
-#define _BSP_H_
+#ifndef BSP_H_
+#define BSP_H_
 
 #include "stm32f0xx.h"
 #include "LCD.h"
@@ -7,7 +7,6 @@
 #include "queue.h"
 #include <stdint.h>
 #include <string.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 #define NONE 0

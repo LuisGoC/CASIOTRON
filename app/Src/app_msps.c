@@ -9,6 +9,7 @@ void HAL_MspInit( void )
 
 void HAL_UART_MspInit(UART_HandleTypeDef *huart)
 {
+    (void)huart;
     GPIO_InitTypeDef GPIO_InitStruct;
     __HAL_RCC_GPIOA_CLK_ENABLE();
     __HAL_RCC_USART2_CLK_ENABLE();
@@ -24,6 +25,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
 
 void HAL_RTC_MspInit(RTC_HandleTypeDef *hrtc)
 {
+    (void)hrtc;
     RCC_OscInitTypeDef RCC_OscInitStruct;
     RCC_PeriphCLKInitTypeDef RCC_RTCPeriClkInit;
     //Encendemos el LSE
@@ -44,12 +46,14 @@ void HAL_RTC_MspInit(RTC_HandleTypeDef *hrtc)
 
 void HAL_WWDG_MspInit(WWDG_HandleTypeDef *hwwdg)
 {
+    (void)hwwdg;
   /* WWDG Peripheral clock enable */
   __HAL_RCC_WWDG_CLK_ENABLE();
 }
 
 void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
 {
+    (void)hspi;
     /*pines B3, B4 y B5 en funcion alterna spi1 */
     GPIO_InitTypeDef GPIO_InitStruct;
     
@@ -65,6 +69,7 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
 
 void MOD_LCD_MspInit(LCD_HandleTypeDef *hlcd)
 {
+    (void)hlcd;
     GPIO_InitTypeDef GPIO_InitStruct;
     __HAL_RCC_GPIOC_CLK_ENABLE();
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -76,6 +81,7 @@ void MOD_LCD_MspInit(LCD_HandleTypeDef *hlcd)
 
 void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim)
 {
+    (void)htim;
     //Enable the clock
     __HAL_RCC_TIM6_CLK_ENABLE();
 
@@ -86,6 +92,7 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim)
 
 void HAL_I2C_MspInit(I2C_HandleTypeDef *hi2c)
 {
+    (void)hi2c;
     GPIO_InitTypeDef GPIO_InitStruct;
     
     __HAL_RCC_GPIOB_CLK_ENABLE();
@@ -101,6 +108,7 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef *hi2c)
 
 void MOD_TEMP_MspInit( TEMP_HandleTypeDef *htemp )
 {
+    (void)htemp;
     GPIO_InitTypeDef GPIO_InitStruct;
     __HAL_RCC_GPIOB_CLK_ENABLE();
     GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;

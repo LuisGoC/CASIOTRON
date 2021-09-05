@@ -1,5 +1,5 @@
-#ifndef _LCD_H_
-#define _LCD_H_
+#ifndef LCD_H_
+#define LCD_H_
 
 #include "app_bsp.h"
 

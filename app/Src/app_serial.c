@@ -13,6 +13,7 @@ void splitCommandWords(void);
 uint8_t convertCommandsToValues(void);
 uint8_t checkErrorsWriteMsg(void);
 uint8_t ZellersCongruenceAlgorithm(uint8_t day, uint8_t month, uint8_t year);
+int32_t myAtoi(char* str);
 void clearBuffer(void);
 
 /*------ Variables -------*/
@@ -50,19 +51,19 @@ void serial_task(void)
     switch (serialState)
     {
     case SERIAL_IDLE:
-        while (HIL_QUEUE_IsEmpty(&SerialQueue) == NOT_OK)
+        while (HIL_QUEUE_IsEmpty(&SerialQueue) == (uint8_t)NOT_OK)
         {
             HAL_NVIC_DisableIRQ(USART2_IRQn);
             HAL_NVIC_DisableIRQ(RTC_IRQn);
             HAL_NVIC_DisableIRQ(TIM6_IRQn);
             HAL_NVIC_DisableIRQ(EXTI4_15_IRQn);
-            HIL_QUEUE_Read(&SerialQueue, &data);
+            (void)HIL_QUEUE_Read(&SerialQueue, &data);
             HAL_NVIC_EnableIRQ(USART2_IRQn);
             HAL_NVIC_EnableIRQ(RTC_IRQn);
             HAL_NVIC_EnableIRQ(TIM6_IRQn);
             HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
 
-            if (data == '\r')
+            if (data == (uint8_t)'\r')
             {
                 serialState = SERIAL_SPLIT;
                 break;
@@ -79,7 +80,7 @@ void serial_task(void)
         serialState = SERIAL_VALUES;
         break;
     case SERIAL_VALUES:
-        if (convertCommandsToValues() == 1)
+        if (convertCommandsToValues() == 1u)
         {
             serialState = SERIAL_ERROR;
         }
@@ -89,7 +90,7 @@ void serial_task(void)
         }
         break;
     case SERIAL_MESSAGE:
-        if (checkErrorsWriteMsg() == 1)
+        if (checkErrorsWriteMsg() == 1u)
         {
             serialState = SERIAL_ERROR;
         }
@@ -97,13 +98,14 @@ void serial_task(void)
         {
             clearBuffer();
             serialState = SERIAL_IDLE;
-            HAL_UART_Transmit(&UartHandle, (uint8_t *)"\r\nOK\r\n", 6, 5000);
+            HAL_UART_Transmit(&UartHandle, (const uint8_t *)"\r\nOK\r\n", 6, 5000);
         }
         break;
     case SERIAL_ERROR:
         clearBuffer();
-        HAL_UART_Transmit(&UartHandle, (uint8_t *)"\r\nERROR\r\n", 9, 5000);
+        HAL_UART_Transmit(&UartHandle, (const uint8_t *)"\r\nERROR\r\n", 9, 5000);
         serialState = SERIAL_IDLE;
+        break;
     default:
         serialState = SERIAL_IDLE;
         break;
@@ -155,7 +157,8 @@ void serial_init(void)
   */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-    HIL_QUEUE_Write(&SerialQueue, &RxByte);
+    (void)huart;
+    (void)HIL_QUEUE_Write(&SerialQueue, &RxByte);
     HAL_UART_Receive_IT(&UartHandle, &RxByte, 1);
 }
 
@@ -167,7 +170,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
   */
 void splitCommandWords(void)
 {
-    strcpy((char *)temporalBuffer, (char *)RxBuffer);
+    (void)strcpy((char *)temporalBuffer, (char *)RxBuffer);
     AT = (uint8_t *)strtok((char *)temporalBuffer, "+");
     commandType = (uint8_t *)strtok(NULL, "=");
     if (strcmp((char *)commandType, "TIME") == 0)
@@ -186,19 +189,23 @@ void splitCommandWords(void)
     {
         charDigit1 = (uint8_t *)strtok(NULL, ",");
         charDigit2 = (uint8_t *)strtok(NULL, "\r");
-        charDigit3 = (uint8_t *)'0';
+        charDigit3 = NULL;
     }
     else if (strcmp((char *)commandType, "HEARTBEAT") == 0)
     {
         charDigit3 = (uint8_t *)strtok(NULL, "\r");
-        charDigit2 = (uint8_t *)'0';
-        charDigit1 = (uint8_t *)'0';
+        charDigit2 = NULL;
+        charDigit1 = NULL;
     }
     else if (strcmp((char *)commandType, "TEMP") == 0)
     {
         charDigit1 = (uint8_t *)strtok(NULL, ",");
         charDigit2 = (uint8_t *)strtok(NULL, "\r");
-        charDigit3 = (uint8_t *)'0';
+        charDigit3 = NULL;
+    }
+    else
+    {
+        //do nothing
     }
 }
 
@@ -212,21 +219,22 @@ void splitCommandWords(void)
 uint8_t convertCommandsToValues(void)
 {
     uint8_t *cadena[] = {charDigit1, charDigit2, charDigit3};
-    for (uint8_t i = 0; i < 3; i++)
+    uint8_t err = 0;
+    for (uint8_t i = 0; i < 3u; i++)
     {
-        for (uint8_t j = 0; cadena[i][j] != '\0'; j++)
+        for (uint8_t j = 0; cadena[i][j] != (uint8_t)'\0'; j++)
         {
-            if ( !(cadena[i][j] >= '0' && cadena[i][j] <= '9')) //Need to be modified for negative numbers
+            if ( !((cadena[i][j] >= (uint8_t)'0') && (cadena[i][j] <= (uint8_t)'9'))) //Need to be modified for negative numbers
             {
-                return 1; //error
+                err = 1; //error
             }
         }
     }
-    MsgToSend.param1 = atoi((char *)charDigit1);
-    MsgToSend.param2 = atoi((char *)charDigit2);
-    MsgToSend.param3 = atoi((char *)charDigit3);
+    MsgToSend.param1 = myAtoi((char *)charDigit1);
+    MsgToSend.param2 = myAtoi((char *)charDigit2);
+    MsgToSend.param3 = myAtoi((char *)charDigit3);
     MsgToSend.param4 = ZellersCongruenceAlgorithm(MsgToSend.param1, MsgToSend.param2, (MsgToSend.param3 + 2000));
-    return 0;
+    return err;
 }
 
 /**
@@ -243,22 +251,22 @@ uint8_t checkErrorsWriteMsg(void)
     {
         if (strcmp((char *)commandType, "TIME") == 0)
         {
-            if (MsgToSend.param1 < 0 || MsgToSend.param1 > 23)
+            if ((MsgToSend.param1 < 0) || (MsgToSend.param1 > 23))
             {
                 err = 1;
             }
-            if (MsgToSend.param2 < 0 || MsgToSend.param2 > 59)
+            if ((MsgToSend.param2 < 0) || (MsgToSend.param2 > 59))
             {
                 err = 1;
             }
-            if (MsgToSend.param3 < 0 || MsgToSend.param3 > 59)
+            if ((MsgToSend.param3 < 0) || (MsgToSend.param3 > 59))
             {
                 err = 1;
             }
-            if (err == 0)
+            if (err == 0u)
             {
                 MsgToSend.msg = TIME;
-                if (HIL_QUEUE_Write(&MsgQueue, &MsgToSend) != OK)
+                if (HIL_QUEUE_Write(&MsgQueue, &MsgToSend) != (uint8_t)OK)
                 {
                     err = 1;
                 }
@@ -266,26 +274,26 @@ uint8_t checkErrorsWriteMsg(void)
         }
         else if (strcmp((char *)commandType, "DATE") == 0)
         {
-            if (MsgToSend.param1 < 1 || MsgToSend.param1 > 31)
+            if ((MsgToSend.param1 < 1) || (MsgToSend.param1 > 31))
             {
                 err = 1;
             }
-            if (MsgToSend.param2 < 1 || MsgToSend.param2 > 12)
+            if ((MsgToSend.param2 < 1) || (MsgToSend.param2 > 12))
             {
                 err = 1;
             }
-            if (MsgToSend.param3 < 0 || MsgToSend.param3 > 99)
+            if ((MsgToSend.param3 < 0) || (MsgToSend.param3 > 99))
             {
                 err = 1;
             }
-            if (MsgToSend.param4 < 1 || MsgToSend.param4 > 7)
+            if ((MsgToSend.param4 < 1u) || (MsgToSend.param4 > 7u))
             {
                 err = 1;
             }
-            if (err == 0)
+            if (err == 0u)
             {
                 MsgToSend.msg = DATE;
-                if (HIL_QUEUE_Write(&MsgQueue, &MsgToSend) != OK)
+                if (HIL_QUEUE_Write(&MsgQueue, &MsgToSend) != (uint8_t)OK)
                 {
                     err = 1;
                 }
@@ -293,18 +301,18 @@ uint8_t checkErrorsWriteMsg(void)
         }
         else if (strcmp((char *)commandType, "ALARM") == 0)
         {
-            if (MsgToSend.param1 < 0 || MsgToSend.param1 > 23)
+            if ((MsgToSend.param1 < 0) || (MsgToSend.param1 > 23))
             {
                 err = 1;
             }
-            if (MsgToSend.param2 < 0 || MsgToSend.param2 > 59)
+            if ((MsgToSend.param2 < 0) || (MsgToSend.param2 > 59))
             {
                 err = 1;
             }
-            if (err == 0)
+            if (err == 0u)
             {
                 MsgToSend.msg = ALARM;
-                if (HIL_QUEUE_Write(&MsgQueue, &MsgToSend) != OK)
+                if (HIL_QUEUE_Write(&MsgQueue, &MsgToSend) != (uint8_t)OK)
                 {
                     err = 1;
                 }
@@ -316,9 +324,9 @@ uint8_t checkErrorsWriteMsg(void)
             {
                 err = 1;
             }
-            if (err == 0)
+            if (err == 0u)
             {
-                if (HIL_QUEUE_Write(&HeartQueue, &MsgToSend.param3) != OK)
+                if (HIL_QUEUE_Write(&HeartQueue, &MsgToSend.param3) != (uint8_t)OK)
                 {
                     err = 1;
                 }
@@ -330,18 +338,18 @@ uint8_t checkErrorsWriteMsg(void)
             {
                 err = 1;
             }
-            if (MsgToSend.param1 < -20 || MsgToSend.param1 > 100)
+            if ((MsgToSend.param1 < -20) || (MsgToSend.param1 > 100))
             {
                 err = 1;
             }
-            if (MsgToSend.param2 < -20 || MsgToSend.param2 > 100)
+            if ((MsgToSend.param2 < -20) || (MsgToSend.param2 > 100))
             {
                 err = 1;
             }
-            if (err == 0)
+            if (err == 0u)
             {
                 MsgToSend.msg = TEMP;
-                if (HIL_QUEUE_Write(&MsgQueue, &MsgToSend) != OK)
+                if (HIL_QUEUE_Write(&MsgQueue, &MsgToSend) != (uint8_t)OK)
                 {
                     err = 1;
                 }
@@ -361,8 +369,8 @@ uint8_t checkErrorsWriteMsg(void)
 
 void clearBuffer(void)
 {
-    memset(RxBuffer, 0, sizeof(RxBuffer));
-    memset(temporalBuffer, 0, sizeof(temporalBuffer));
+    (void)memset(RxBuffer, 0, sizeof(RxBuffer));
+    (void)memset(temporalBuffer, 0, sizeof(temporalBuffer));
 }
 
 /**
@@ -375,28 +383,66 @@ void clearBuffer(void)
   */
 uint8_t ZellersCongruenceAlgorithm(uint8_t day, uint8_t month, uint8_t year)
 {
-    uint8_t h;
-    uint32_t K, J;
-    if (month <= 2)
+    uint16_t h;
+    uint32_t K;
+    uint32_t J;
+    uint8_t mCopy;
+    uint8_t yCopy;
+    uint8_t wday;
+
+    mCopy = month;
+    yCopy = year;
+
+    if (mCopy <= 2u)
     {
-        month += 12;
-        year = year - 1;
+        mCopy += 12u;
+        yCopy = yCopy - 1u;
     }
     else
     {
-        month = month - 2;
+        mCopy = mCopy - 2u;
     }
 
-    K = year % 100;
-    J = year / 100;
+    K = yCopy % 100u;
+    J = yCopy / 100u;
 
-    h = ((700 + ((26 * month - 2) / 10) + day + K + (K / 4) + ((J / 4) + 5 * J)) % 7) + 1;
-    if (h == 0)
+    h = ((700u + (((26u * mCopy) - 2u) / 10u) + day + K + (K / 4u) + ((J / 4u) + (5u * J))) % 7u) + 1u;
+    if (h == 0u)
     {
-        return 7;
+        wday = 7u;
     }
     else
     {
-        return h;
+        wday = h;
     }
+    return wday;
+}
+
+/**
+  * @brief This function converts an array to an integer number.
+  * @param str pointer to a character type.
+  * @retval an integer value of the number.
+  */
+int32_t myAtoi(char* str)
+{
+    int32_t res = 0;
+    int32_t sign = 1;
+    int32_t i = 0;
+ 
+    // If number is negative,
+    if (str[0] == '-') {
+        sign = -1;
+        // Also update index of first digit
+        i++;
+    }
+ 
+    // Iterate through all digits
+    // and update the result
+    for(; str[i] != '\0'; ++i)
+    {
+        res = ((uint32_t)res * 10UL) + ((uint8_t)str[i] - (uint8_t)'0');
+    }
+    
+    // Return result with sign
+    return sign * res;
 }

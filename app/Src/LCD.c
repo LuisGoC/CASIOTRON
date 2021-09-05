@@ -38,7 +38,7 @@ void MOD_LCD_Init(LCD_HandleTypeDef *hlcd)
   */
 __weak void MOD_LCD_MspInit(LCD_HandleTypeDef *hlcd)
 {
-
+    (void)hlcd;
 }
 
 /**
@@ -100,8 +100,8 @@ void MOD_LCD_SetCursor( LCD_HandleTypeDef *hlcd, uint8_t row, uint8_t col )
 {
     uint8_t a[2][16] = {{0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8A, 0x8B, 0x8C, 0x8D, 0x8E, 0x8F}, 
                         {0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9, 0xCA, 0xCB, 0xCC, 0xCD, 0xCE, 0xCF}};
-    if(row >= 0 && row <= 1){
-        if(col >= 0 && col <= 15){
+    if((row >= 0u) && (row <= 1u)){
+        if((col >= 0u) && (col <= 15u)){
             MOD_LCD_Command(hlcd, a[row][col]);
         }
     }

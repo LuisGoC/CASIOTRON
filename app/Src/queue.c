@@ -13,9 +13,11 @@ uint8_t HIL_QUEUE_Write(QUEUE_HandleTypeDef *hqueue, void *data)
 {
     uint8_t err; 
 
-    if (hqueue->Full == NOT_OK) 
+    if (hqueue->Full == (uint8_t)NOT_OK) 
     { 
-        memcpy(hqueue->Buffer + hqueue->Head, data, hqueue->Size);  
+        /*cppcheck supression because the queue "buffer" type is void 
+          and needs to be incremented by "size" queue's variable  */
+        (void)memcpy(hqueue->Buffer + hqueue->Head, data, hqueue->Size);  /* cppcheck-suppress misra-c2012-18.4*/
         hqueue->Head = hqueue->Head + hqueue->Size;
         if (hqueue->Head == (hqueue->Size * hqueue->Elements)) 
         {
@@ -25,7 +27,7 @@ uint8_t HIL_QUEUE_Write(QUEUE_HandleTypeDef *hqueue, void *data)
         {
             hqueue->Full = OK;
         }
-        if (hqueue->Empty == OK)
+        if (hqueue->Empty == (uint8_t)OK)
         {
             hqueue->Empty = NOT_OK;
         }
@@ -41,15 +43,18 @@ uint8_t HIL_QUEUE_Write(QUEUE_HandleTypeDef *hqueue, void *data)
 
 uint8_t HIL_QUEUE_Read(QUEUE_HandleTypeDef *hqueue, void *data)
 {
-    if (hqueue->Empty == NOT_OK) 
+    uint8_t err;
+    if (hqueue->Empty == (uint8_t)NOT_OK) 
     {
-        memcpy(data, hqueue->Buffer + hqueue->Tail, hqueue->Size);
+        /*cppcheck supression because the queue "buffer" type is void 
+          and needs to be incremented by "size" queue's variable  */
+        (void)memcpy(data, hqueue->Buffer + hqueue->Tail, hqueue->Size); /* cppcheck-suppress misra-c2012-18.4*/
         hqueue->Tail = hqueue->Tail + hqueue->Size;
         if (hqueue->Tail == (hqueue->Size * hqueue->Elements)) 
         {
-            hqueue->Tail = 0;
+            hqueue->Tail = 0UL;
         }
-        if(hqueue->Full == OK)
+        if(hqueue->Full == (uint8_t)OK)
         {
             hqueue->Full = NOT_OK;
         }
@@ -57,19 +62,27 @@ uint8_t HIL_QUEUE_Read(QUEUE_HandleTypeDef *hqueue, void *data)
         {
             hqueue->Empty = OK;
         }
-        return OK;
+        err = OK;
     }
     else
     {
-        return NOT_OK;
+        err = NOT_OK;
     }
+    return err;
 }
 
 uint8_t HIL_QUEUE_IsEmpty(QUEUE_HandleTypeDef *hqueue)
 {
+    uint8_t val;
+
     if (hqueue->Empty == (uint8_t)OK)
     {
-        return OK;
+        val = OK;
     }
-    return NOT_OK;
+    else
+    {
+        val = NOT_OK;
+    }
+
+    return val;
 }

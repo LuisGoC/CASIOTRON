@@ -18,7 +18,7 @@ void MOD_TEMP_Init( TEMP_HandleTypeDef *htemp )
   */
 __weak void MOD_TEMP_MspInit( TEMP_HandleTypeDef *htemp )
 {
-
+    (void)htemp;
 }
 
 /**
