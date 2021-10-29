@@ -126,7 +126,7 @@ Once you installed everything, clone and build the project you should make the h
 
 The following illustration describes how to make the connections.
 
-![Casiotron Schematic Diagram](https://github.com/LuisGoC/CASIOTRON/blob/main/Serial.drawio.png)
+![Casiotron Schematic Diagram](https://github.com/LuisGoC/CASIOTRON/blob/main/Casiotron_Schematic_Diagram.png)
 
 The table below shows the AT commands allowed to set time, date or alarms in the project via serial port terminal:
 
