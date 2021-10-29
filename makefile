@@ -47,7 +47,7 @@ $(OBJ_DIR)/%.o: %.c
 $(OBJ_DIR)/%.o: %.s
 	$(CS) -c -mcpu=$(MACH) -mthumb -mfloat-abi=soft $< -o $@
 
-.PHONY: build clean misra_test load debug
+.PHONY: build clean misra_test open debug flash
 build:
 	mkdir -p $(OBJ_DIR)
 
@@ -59,9 +59,12 @@ clean:
 misra_test: 
 	cppcheck --addon=misra.json --inline-suppr --quiet --std=c99 --template=gcc --force app/Src -I app/Inc
 
-load:
+open:
 	openocd -f board/st_nucleo_f0.cfg 
 
 debug:
 	arm-none-eabi-gdb final.elf -x=commands.gdb
+
+flash:
+	openocd -f interface/stlink-v2-1.cfg -f target/stm32f0x.cfg -c "program Build/$(TARGET).hex verify reset" -c shutdown
 
